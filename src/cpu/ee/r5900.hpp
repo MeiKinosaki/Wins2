@@ -4,6 +4,12 @@
 #include <cstddef>
 #include <cstdint>
 namespace wins2 {
+struct R5900State {
+ std::array<std::uint64_t,32> gpr{};
+ std::uint64_t hi{0},lo{0};
+ std::uint32_t pc{0},last_instruction{0},branch_target{0};
+ bool branch_pending{false},halted{false};
+};
 class R5900 {
 public:
  static constexpr std::size_t kRegisterCount=32;
@@ -18,6 +24,8 @@ public:
  void setPc(std::uint32_t value) noexcept{pc_=value;}
  [[nodiscard]] bool halted() const noexcept{return halted_;}
  [[nodiscard]] std::uint32_t lastInstruction() const noexcept{return last_instruction_;}
+ [[nodiscard]] R5900State captureState() const noexcept;
+ void restoreState(const R5900State& state) noexcept;
 private:
  [[nodiscard]] static std::uint64_t signExtend32(std::uint32_t value) noexcept;
  [[nodiscard]] static std::int64_t signExtend16(std::uint16_t value) noexcept;

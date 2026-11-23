@@ -7,7 +7,8 @@
 ## Goals
 - Portable Windows 10/11 x64 distribution, no installer.
 - Baseline x86-64/SSE2; AVX/AVX2 optional only.
-- ISO, BIN/CUE, CHD and game-folder support (planned).\n- OPL/USBExtreme UL metadata and split-part reader prototype (implemented; not yet connected to a bootable CD/DVD path).
+- ISO, BIN/CUE, CHD and game-folder support (planned).
+- OPL/USBExtreme UL metadata and split-part reader prototype (implemented; not yet connected to a bootable CD/DVD path).
 - Multi-disc entries and disc switching without restarting (planned).
 - Game-specific graphics, speed and memory settings (planned).
 - Save states, memory cards, library covers and controller configuration (planned).

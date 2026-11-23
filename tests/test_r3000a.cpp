@@ -38,5 +38,5 @@ int main(){
  if(!cpu.step()||cpu.halted()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=10u)FAIL(14);
  // Save state preserves COP0 state.
  const auto state=cpu.captureState();cpu.setCop0(12,0);cpu.restoreState(state);if(cpu.cop0(12)!=state.cop0[12])FAIL(15);
- FAIL(0);
+ return 0;
 }

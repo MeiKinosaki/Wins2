@@ -36,8 +36,8 @@ bool R5900::step() noexcept{
   case 0x26:setReg(rd,a^b);break;case 0x27:setReg(rd,~(a|b));break;
   case 0x2A:setReg(rd,static_cast<std::int64_t>(a)<static_cast<std::int64_t>(b));break;
   case 0x2B:setReg(rd,a<b);break;
-  case 0x2C:setReg(rd,a+b);break; // DADDU
-  case 0x2E:setReg(rd,a-b);break; // DSUBU
+  case 0x2D:setReg(rd,a+b);break; // DADDU
+  case 0x2F:setReg(rd,a-b);break; // DSUBU
   case 0x38:setReg(rd,b<<sa);break; // DSLL
   case 0x3A:setReg(rd,b>>sa);break; // DSRL
   case 0x3B:setReg(rd,static_cast<std::uint64_t>(static_cast<std::int64_t>(b)>>sa));break; // DSRA

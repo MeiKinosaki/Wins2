@@ -61,4 +61,15 @@ bool R5900::step() noexcept{
  }
  gpr_[0]=0;if(apply)pc_=target;return true;
 }
+
+R5900State R5900::captureState() const noexcept {
+ R5900State s; s.gpr=gpr_; s.gpr[0]=0; s.hi=hi_; s.lo=lo_; s.pc=pc_;
+ s.last_instruction=last_instruction_; s.branch_target=branch_target_;
+ s.branch_pending=branch_pending_; s.halted=halted_; return s;
+}
+void R5900::restoreState(const R5900State& s) noexcept {
+ gpr_=s.gpr; gpr_[0]=0; hi_=s.hi; lo_=s.lo; pc_=s.pc;
+ last_instruction_=s.last_instruction; branch_target_=s.branch_target;
+ branch_pending_=s.branch_pending; halted_=s.halted;
+}
 }

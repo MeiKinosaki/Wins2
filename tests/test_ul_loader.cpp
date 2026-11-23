@@ -21,9 +21,15 @@ int main(){
  if(loader.read(loader.games()[0],0,nullptr,1,&error))return 6;
  std::array<char,7> tooLong{};if(loader.read(loader.games()[0],0,tooLong.data(),tooLong.size(),&error))return 11;
  if(loader.read(loader.games()[0],UINT64_MAX-2,tooLong.data(),4,&error))return 12;
- std::array<char,2048> sectorData{};sectorData.fill('U');{std::ofstream out(part,std::ios::binary);out.write(sectorData.data(),sectorData.size());}
+ std::array<char,2050> sectorData{};sectorData.fill('U');{std::ofstream out(part,std::ios::binary);out.write(sectorData.data(),sectorData.size());}
  wins2::VirtualCdDvdDrive drive;if(!drive.mountUl(root,0,&error))return 7;
- std::array<char,2048> sectorRead{};if(!drive.readSector(0,sectorRead.data(),sectorRead.size(),&error)||sectorRead!=sectorData)return 8;
+ std::array<char,2048> sectorRead{};if(!drive.readSector(0,sectorRead.data(),sectorRead.size(),&error)||!std::equal(sectorRead.begin(),sectorRead.end(),sectorData.begin()))return 8;
+ if(drive.sectorCount()!=2)return 14;
+ std::array<char,4096> twoSectors{};if(!drive.readSectors(0,2,twoSectors.data(),&error))return 15;
+ if(twoSectors[0]!='U'||twoSectors[2047]!='U'||twoSectors[2048]!='U'||twoSectors[2049]!='U'||twoSectors[2050]!=0)return 16;
+ if(drive.readSector(2,sectorRead.data(),sectorRead.size(),&error))return 17;
+ wins2::CdvdController controller(drive);if(!controller.refresh(&error)||!controller.read(0,2,&error)||controller.data().size()!=4096)return 18;
+ if(controller.read(1,2,&error))return 19;
  if(drive.discInfo().serial!="SLUS_123.45")return 9;drive.eject();if(drive.mounted())return 10;
  std::filesystem::remove(part,ec);if(loader.read(loader.games()[0],0,data.data(),data.size(),&error))return 13;
  std::filesystem::remove_all(root,ec);std::cout<<"Wins2 OPL UL metadata, CRC and chunk-reader tests passed.\n";return 0;

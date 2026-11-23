@@ -72,7 +72,21 @@ bool Iso9660Image::readRootFile(const std::string& name,std::vector<std::uint8_t
  if(static_cast<std::uint64_t>(entry.lba)*kSectorSize+entry.size>fileSize_){setError(error,"ISO file extent is outside the image.");return false;}
  data.resize(entry.size);file_.clear();file_.seekg(static_cast<std::streamoff>(static_cast<std::uint64_t>(entry.lba)*kSectorSize));if(entry.size)file_.read(reinterpret_cast<char*>(data.data()),entry.size);if(!file_){data.clear();setError(error,"Could not read ISO file extent.");return false;}return true;
 }
-bool VirtualCdDvdDrive::mountIso(const std::filesystem::path& path,std::string* error){eject();return image_.open(path,error);}
-void VirtualCdDvdDrive::eject()noexcept{image_.close();}
-bool VirtualCdDvdDrive::readSector(std::uint32_t lba,void* destination,std::size_t bytes,std::string* error)const{return image_.readSector(lba,destination,bytes,error);}
+bool VirtualCdDvdDrive::mountIso(const std::filesystem::path& path,std::string* error){
+ eject();if(!image_.open(path,error))return false;info_=image_.info();return true;
+}
+bool VirtualCdDvdDrive::mountUl(const std::filesystem::path& root,std::size_t gameIndex,std::string* error){
+ eject();if(!ulLoader_.scan(root,error))return false;
+ if(gameIndex>=ulLoader_.games().size()){setError(error,"UL game index is out of range.");return false;}
+ ulGame_=ulLoader_.games()[gameIndex];ulMounted_=true;info_={};info_.volumeId=ulGame_.name;info_.serial=ulGame_.startup;return true;
+}
+void VirtualCdDvdDrive::eject()noexcept{image_.close();ulMounted_=false;ulGame_={};info_={};}
+bool VirtualCdDvdDrive::readSector(std::uint32_t lba,void* destination,std::size_t bytes,std::string* error)const{
+ if(ulMounted_){
+  if(bytes!=Iso9660Image::kSectorSize||destination==nullptr){setError(error,"Virtual CD/DVD reads require a non-null 2048-byte sector buffer.");return false;}
+  const auto offset=static_cast<std::uint64_t>(lba)*Iso9660Image::kSectorSize;
+  return ulLoader_.read(ulGame_,offset,destination,bytes,error);
+ }
+ return image_.readSector(lba,destination,bytes,error);
+}
 }

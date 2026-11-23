@@ -87,9 +87,15 @@ bool VirtualCdDvdDrive::mountIso(const std::filesystem::path& path,std::string* 
 bool VirtualCdDvdDrive::mountUl(const std::filesystem::path& root,std::size_t gameIndex,std::string* error){
  eject();if(!ulLoader_.scan(root,error))return false;
  if(gameIndex>=ulLoader_.games().size()){setError(error,"UL game index is out of range.");return false;}
- ulGame_=ulLoader_.games()[gameIndex];ulMounted_=true;info_={};info_.volumeId=ulGame_.name;info_.serial=ulGame_.startup;return true;
+ ulGame_=ulLoader_.games()[gameIndex];ulMounted_=true;ulByteSize_=0;
+ for(std::size_t part=0;part<ulGame_.parts;++part){
+  std::error_code ec;const auto size=std::filesystem::file_size(ulLoader_.partPath(ulGame_,part),ec);
+  if(ec||size==0||ulByteSize_>UINT64_MAX-size){eject();setError(error,"UL image contains a missing, empty or oversized part.");return false;}
+  ulByteSize_+=size;
+ }
+ info_={};info_.volumeId=ulGame_.name;info_.serial=ulGame_.startup;info_.volumeSectors=static_cast<std::uint32_t>(std::min<std::uint64_t>((ulByteSize_+2047u)/2048u,UINT32_MAX));return true;
 }
-void VirtualCdDvdDrive::eject()noexcept{image_.close();ulMounted_=false;ulGame_={};info_={};}
+void VirtualCdDvdDrive::eject()noexcept{image_.close();ulMounted_=false;ulGame_={};ulByteSize_=0;info_={};}
 bool VirtualCdDvdDrive::readSectors(std::uint32_t firstLba,std::uint32_t count,void* destination,std::string* error)const{
  if(count==0)return true;
  if(destination==nullptr){setError(error,"Multi-sector destination buffer is null.");return false;}
@@ -103,8 +109,12 @@ bool VirtualCdDvdDrive::readSectors(std::uint32_t firstLba,std::uint32_t count,v
 bool VirtualCdDvdDrive::readSector(std::uint32_t lba,void* destination,std::size_t bytes,std::string* error)const{
  if(ulMounted_){
   if(bytes!=Iso9660Image::kSectorSize||destination==nullptr){setError(error,"Virtual CD/DVD reads require a non-null 2048-byte sector buffer.");return false;}
+  if(lba>=sectorCount()){setError(error,"Requested UL sector is outside the mounted image.");return false;}
   const auto offset=static_cast<std::uint64_t>(lba)*Iso9660Image::kSectorSize;
-  return ulLoader_.read(ulGame_,offset,destination,bytes,error);
+  const auto available=static_cast<std::size_t>(std::min<std::uint64_t>(bytes,ulByteSize_-offset));
+  if(!ulLoader_.read(ulGame_,offset,destination,available,error))return false;
+  if(available<bytes)std::fill(static_cast<std::uint8_t*>(destination)+available,static_cast<std::uint8_t*>(destination)+bytes,0);
+  return true;
  }
  return image_.readSector(lba,destination,bytes,error);
 }

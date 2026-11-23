@@ -12,7 +12,8 @@ int main(){
  if(!memory.write32(wins2::IopMemory::kScratchpadBase,0xA1B2C3D4u))return 7;
  if(!memory.read32(wins2::IopMemory::kScratchpadBase,word)||word!=0xA1B2C3D4u)return 8;
  if(!memory.write32(wins2::IopMemory::kScratchpadBase+1020u,0x12345678u))return 9;
- if(memory.read32(wins2::IopMemory::kScratchpadBase+1020u,word))return 10;
+ if(!memory.read32(wins2::IopMemory::kScratchpadBase+1020u,word)||word!=0x12345678u)return 10;
+ if(memory.read32(wins2::IopMemory::kScratchpadBase+1021u,word))return 14;
  if(memory.read8(0x00200000u,byte))return 11;
  if(memory.write32(0x101u,0u))return 12;
  if(memory.read32(0x1F8003FEu,word))return 13;

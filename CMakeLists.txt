@@ -7,6 +7,7 @@ option(WINS2_BUILD_TESTS "Build Wins2 unit tests" ON)
 add_library(wins2_core
  src/core/memory.cpp
  src/disc/ul_loader.cpp
+ src/disc/iso9660.cpp
  src/core/save_state.cpp
  src/cpu/ee/r5900.cpp
  src/frontend/user_paths.cpp

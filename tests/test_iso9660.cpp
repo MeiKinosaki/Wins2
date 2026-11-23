@@ -44,6 +44,8 @@ int main(){
  if(cdvd.execute(wins2::CdvdCommand::Seek,24,0,&error))return 18;
  if(cdvd.lastCommand().success||cdvd.status()!=wins2::CdvdStatus::Error)return 19;
  if(drive.readSector(24,sector.data(),sector.size(),&error))return 10;
+ if(cdvd.execute(static_cast<wins2::CdvdCommand>(0xFF),0,0,&error))return 20;
+ if(cdvd.lastCommand().success||cdvd.status()!=wins2::CdvdStatus::Error)return 21;
  if(drive.readSector(0,sector.data(),512,&error))return 11;
  drive.eject();if(drive.mounted()||drive.readSector(0,sector.data(),sector.size(),&error))return 12;
  std::filesystem::remove(path);std::cout<<"ISO 9660 sector, SYSTEM.CNF PS2 serial and virtual drive tests passed.\n";return 0;

@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(WINS2_BUILD_TESTS "Build Wins2 unit tests" ON)
 add_library(wins2_core
  src/core/memory.cpp
+ src/disc/ul_loader.cpp
  src/core/save_state.cpp
  src/cpu/ee/r5900.cpp
  src/frontend/user_paths.cpp
@@ -29,4 +30,7 @@ if(WINS2_BUILD_TESTS)
  add_executable(wins2_storage_tests tests/test_storage.cpp)
  target_link_libraries(wins2_storage_tests PRIVATE wins2_core)
  add_test(NAME storage_tests COMMAND wins2_storage_tests)
+ add_executable(wins2_ul_tests tests/test_ul_loader.cpp)
+ target_link_libraries(wins2_ul_tests PRIVATE wins2_core)
+ add_test(NAME ul_loader_tests COMMAND wins2_ul_tests)
 endif()

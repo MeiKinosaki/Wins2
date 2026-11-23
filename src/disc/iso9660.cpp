@@ -40,7 +40,7 @@ bool Iso9660Image::open(const std::filesystem::path& path,std::string* error){
  DirectoryEntry boot{};if(findRootEntry("SYSTEM.CNF;1",boot,nullptr)){
   std::vector<std::uint8_t> bytes;if(readRootFile("SYSTEM.CNF;1",bytes,nullptr)){
    std::string cnf(bytes.begin(),bytes.end());const auto pos=upper(cnf).find("BOOT2");
-   if(pos!=std::string::npos){const auto eq=cnf.find('=',pos);if(eq!=std::string::npos){auto start=cnf.find_first_not_of(" \t",eq+1);if(start!=std::string::npos){auto stop=cnf.find_first_of("\r\n \t",start);info_.bootFile=cnf.substr(start,stop==std::string::npos?std::string::npos:stop-start);const auto slash=info_.bootFile.find_last_of("/\\");auto file=info_.bootFile.substr(slash==std::string::npos?0:slash+1);const auto dot=file.find('.');if(dot!=std::string::npos)info_.serial=file.substr(0,dot);}}}
+   if(pos!=std::string::npos){const auto eq=cnf.find('=',pos);if(eq!=std::string::npos){auto start=cnf.find_first_not_of(" \t",eq+1);if(start!=std::string::npos){auto stop=cnf.find_first_of("\r\n \t",start);info_.bootFile=cnf.substr(start,stop==std::string::npos?std::string::npos:stop-start);const auto slash=info_.bootFile.find_last_of("/\\");auto file=info_.bootFile.substr(slash==std::string::npos?0:slash+1);const auto version=file.find(';');info_.serial=file.substr(0,version);}}}
   }
  }
  return true;

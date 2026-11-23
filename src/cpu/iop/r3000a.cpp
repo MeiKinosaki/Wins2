@@ -14,7 +14,7 @@ void R3000A::setCop0(std::size_t i,std::uint32_t v)noexcept{
 }
 void R3000A::updateCausePending()noexcept{}
 void R3000A::setInterruptLine(std::uint8_t line,bool asserted)noexcept{
- if(line>=8)return;const auto bit=1u<<(8u+line);
+ if(line>=6)return;const auto bit=1u<<(10u+line);
  if(asserted)cop0_[kCause]|=bit;else cop0_[kCause]&=~bit;
 }
 bool R3000A::interruptPending()const noexcept{return (cop0_[kStatus]&kStatusIEc)!=0u&&(cop0_[kStatus]&cop0_[kCause]&kStatusInterruptMask)!=0u;}
@@ -46,7 +46,7 @@ bool R3000A::step()noexcept{
   case 0x0C:raiseException(IopException::Syscall,here,apply);return true;
   case 0x0D:raiseException(IopException::Breakpoint,here,apply);return true;
   case 0x10:setReg(rd,hi_);break;case 0x11:hi_=a;break;case 0x12:setReg(rd,lo_);break;case 0x13:lo_=a;break;
-  case 0x20:case 0x21:setReg(rd,a+b);break;case 0x22:case 0x23:setReg(rd,a-b);break;
+  case 0x20:{const auto result=static_cast<std::int64_t>(static_cast<std::int32_t>(a))+static_cast<std::int64_t>(static_cast<std::int32_t>(b));if(result>INT32_MAX||result<INT32_MIN){raiseException(IopException::Overflow,here,apply);return true;}setReg(rd,static_cast<std::uint32_t>(result));break;}case 0x21:setReg(rd,a+b);break;case 0x22:{const auto result=static_cast<std::int64_t>(static_cast<std::int32_t>(a))-static_cast<std::int64_t>(static_cast<std::int32_t>(b));if(result>INT32_MAX||result<INT32_MIN){raiseException(IopException::Overflow,here,apply);return true;}setReg(rd,static_cast<std::uint32_t>(result));break;}case 0x23:setReg(rd,a-b);break;
   case 0x24:setReg(rd,a&b);break;case 0x25:setReg(rd,a|b);break;case 0x26:setReg(rd,a^b);break;case 0x27:setReg(rd,~(a|b));break;
   case 0x2A:setReg(rd,static_cast<std::int32_t>(a)<static_cast<std::int32_t>(b));break;case 0x2B:setReg(rd,a<b);break;
   default:raiseException(IopException::ReservedInstruction,here,apply);return true;
@@ -55,7 +55,7 @@ bool R3000A::step()noexcept{
  case 0x03:setReg(31,here+8u);scheduleBranch((pc_&0xF0000000u)|((ins&0x03FFFFFFu)<<2u),here);break;
  case 0x04:if(a==b)scheduleBranch(pc_+static_cast<std::uint32_t>(simm*4),here);break;
  case 0x05:if(a!=b)scheduleBranch(pc_+static_cast<std::uint32_t>(simm*4),here);break;
- case 0x08:case 0x09:setReg(rt,a+static_cast<std::uint32_t>(simm));break;
+ case 0x08:{const auto result=static_cast<std::int64_t>(static_cast<std::int32_t>(a))+simm;if(result>INT32_MAX||result<INT32_MIN){raiseException(IopException::Overflow,here,apply);return true;}setReg(rt,static_cast<std::uint32_t>(result));break;}case 0x09:setReg(rt,a+static_cast<std::uint32_t>(simm));break;
  case 0x0A:setReg(rt,static_cast<std::int32_t>(a)<simm);break;case 0x0B:setReg(rt,a<static_cast<std::uint32_t>(simm));break;
  case 0x0C:setReg(rt,a&imm);break;case 0x0D:setReg(rt,a|imm);break;case 0x0E:setReg(rt,a^imm);break;case 0x0F:setReg(rt,static_cast<std::uint32_t>(imm)<<16u);break;
  case 0x10:

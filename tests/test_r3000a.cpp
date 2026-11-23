@@ -14,7 +14,7 @@ int main(){
  if(!cpu.step()||cpu.cop0(12)!=0x0000FF01u)FAIL(1);
  if(!cpu.step()||cpu.reg(9)!=0x0000FF01u)FAIL(2);
  // Masked pending interrupts do not fire; when enabled, line 2 wins over line 5.
- cpu.reset(0x100u);cpu.setCop0(12,0x00000401u);cpu.setInterruptLine(5,true);cpu.setInterruptLine(2,true);
+ cpu.reset(0x100u);cpu.setCop0(12,0x00000201u);cpu.setInterruptLine(5,true);cpu.setInterruptLine(2,true);
  if(cpu.interruptPending())FAIL(3);
  cpu.setCop0(12,0x00002401u);if(!cpu.interruptPending())FAIL(4);
  if(!cpu.step()||cpu.pc()!=wins2::R3000A::kGeneralExceptionVector)FAIL(5);

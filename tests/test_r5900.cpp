@@ -16,7 +16,7 @@ int main(){
  c.reset(0x100);c.setReg(1,7);c.setReg(2,5);
  if(!c.step()||c.lo()!=35||c.hi()!=0)return fail(5,"MULT HI/LO result");
  if(!c.step()||c.reg(6)!=35)return fail(6,"MFLO result");
- if(!m.write32(0x120,rr(1,2,7,0,0x2C))||!m.write32(0x124,rr(7,0,8,4,0x38)))return fail(7,"write 64-bit program");
+ if(!m.write32(0x120,rr(1,2,7,0,0x2D))||!m.write32(0x124,rr(0,7,8,4,0x38)))return fail(7,"write 64-bit program");
  c.reset(0x120);c.setReg(1,0x100000000ull);c.setReg(2,3);
  if(!c.step()||c.reg(7)!=0x100000003ull)return fail(8,"DADDU result");
  if(!c.step()||c.reg(8)!=0x1000000030ull)return fail(9,"DSLL result");

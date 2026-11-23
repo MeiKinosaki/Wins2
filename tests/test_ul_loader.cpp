@@ -18,5 +18,8 @@ int main(){
  std::array<char,6> data{};if(!loader.read(loader.games()[0],0,data.data(),data.size(),&error)){std::cerr<<error<<"\n";return 4;}
  if(std::string(data.data(),data.size())!="ULDATA")return 5;
  if(loader.read(loader.games()[0],0,nullptr,1,&error))return 6;
+ std::array<char,7> tooLong{};if(loader.read(loader.games()[0],0,tooLong.data(),tooLong.size(),&error))return 7;
+ if(loader.read(loader.games()[0],UINT64_MAX-2,tooLong.data(),4,&error))return 8;
+ std::filesystem::remove(part,ec);if(loader.read(loader.games()[0],0,data.data(),data.size(),&error))return 9;
  std::filesystem::remove_all(root,ec);std::cout<<"Wins2 OPL UL metadata, CRC and chunk-reader tests passed.\n";return 0;
 }

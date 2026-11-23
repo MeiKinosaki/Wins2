@@ -7,8 +7,10 @@
 ## Goals
 - Portable Windows 10/11 x64 distribution, no installer.
 - Baseline x86-64/SSE2; AVX/AVX2 optional only.
-- ISO, BIN/CUE, CHD and game-folder support (planned).
-- OPL/USBExtreme UL metadata and split-part reader prototype (implemented; not yet connected to a bootable CD/DVD path).
+- ISO 9660 image reader prototype with 2048-byte sector reads, PVD parsing and root-level SYSTEM.CNF lookup (implemented; synthetic validation pending).
+- Virtual CD/DVD sector interface for ISO and OPL/USBExtreme UL images (implemented; not connected to the PS2 CD/DVD controller yet).
+- OPL/USBExtreme UL metadata and split-part reader with missing-part and range checks (implemented; validation pending).
+- BIN/CUE, CHD decoding and game-folder mounting (planned).
 - Multi-disc entries and disc switching without restarting (planned).
 - Game-specific graphics, speed and memory settings (planned).
 - Save states, memory cards, library covers and controller configuration (planned).
@@ -23,6 +25,10 @@ At startup Wins2 creates these folders beside the executable:
 - `screenshots/`, `config/`, `shaders/`, `cache/`, `logs/`.
 
 The current save-state prototype stores EE RAM and the currently implemented R5900 CPU state in a versioned binary file with a checksum. It is not yet a complete PS2 save state: IOP, VU0/VU1, GS, SPU2, DMA, timers, CD/DVD and other devices must be included before compatibility across real game sessions can be claimed. Memory-card emulation is not implemented yet.
+
+## Disc image test coverage
+- Synthetic ISO fixture validates the primary volume descriptor, sector reads, root SYSTEM.CNF and PS2 boot serial extraction.
+- UL tests cover metadata, part reads, missing parts, overrun/overflow rejection and sector reads through the virtual drive. GitHub Actions must pass before these are marked validated.
 
 ## Build
 Requires CMake 3.20+ and a C++20 compiler.

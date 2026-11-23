@@ -94,6 +94,7 @@ bool VirtualCdDvdDrive::readSectors(std::uint32_t firstLba,std::uint32_t count,v
  if(count==0)return true;
  if(destination==nullptr){setError(error,"Multi-sector destination buffer is null.");return false;}
  const auto end=static_cast<std::uint64_t>(firstLba)+count;
+ if(end>static_cast<std::uint64_t>(UINT32_MAX)+1u){setError(error,"Multi-sector LBA range overflow.");return false;}
  if(!ulMounted_)return image_.readSectors(firstLba,count,destination,error);
  auto* out=static_cast<std::uint8_t*>(destination);
  for(std::uint32_t i=0;i<count;++i)if(!readSector(firstLba+i,out+static_cast<std::size_t>(i)*Iso9660Image::kSectorSize,Iso9660Image::kSectorSize,error))return false;

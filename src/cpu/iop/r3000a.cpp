@@ -31,7 +31,7 @@ void R3000A::raiseException(IopException exception,std::uint32_t faultPc,bool in
 }
 bool R3000A::step()noexcept{
  if(halted_)return false;
- if(interruptPending()){raiseException(IopException::Interrupt,pc_,false);return true;}
+ if(interruptPending()){raiseException(IopException::Interrupt,pc_,branch_pending_);return true;}
  std::uint32_t ins=0;
  if(!memory_.read32(pc_,ins)){raiseException(IopException::AddressLoad,pc_,false,pc_);return true;}
  last_instruction_=ins;const auto here=pc_;const bool apply=branch_pending_;const auto target=branch_target_;branch_pending_=false;pc_+=4u;

@@ -9,6 +9,7 @@ bool CdvdController::refresh(std::string* error){
 bool CdvdController::read(std::uint32_t lba,std::uint32_t sectors,std::string* error){
  if(!drive_.mounted()){status_=CdvdStatus::NoDisc;if(error)*error="No disc is mounted.";return false;}
  if(sectors==0||sectors>32){status_=CdvdStatus::Error;if(error)*error="CD/DVD transfer must contain 1 to 32 sectors.";return false;}
+ if(static_cast<std::uint64_t>(lba)+sectors>static_cast<std::uint64_t>(UINT32_MAX)+1u){status_=CdvdStatus::Error;if(error)*error="CD/DVD LBA range overflow.";return false;}
  const auto bytes=static_cast<std::uint64_t>(sectors)*Iso9660Image::kSectorSize;
  if(bytes>std::numeric_limits<std::size_t>::max()){status_=CdvdStatus::Error;if(error)*error="CD/DVD transfer size overflow.";return false;}
  status_=CdvdStatus::Reading;

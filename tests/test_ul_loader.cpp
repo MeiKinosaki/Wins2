@@ -12,7 +12,7 @@ int main(){
  wins2::UlLoader loader;std::string error;if(!loader.scan(root,&error)){std::cerr<<error<<"\n";return 1;}
  if(loader.games().size()!=1||loader.games()[0].name!="Test OPL Game"||loader.games()[0].startup!="SLUS_123.45"||loader.games()[0].parts!=1||loader.games()[0].media!=0x14)return 2;
  const auto part=loader.partPath(loader.games()[0],0);
- if(part.filename().string()!="ul.AF9FCC67.SLUS_123.45.00") {std::cerr<<part.filename().string()<<"\n";return 3;}
+ if(part.filename().string()!="ul.E7259824.SLUS_123.45.00") {std::cerr<<part.filename().string()<<"\n";return 3;}
  {std::ofstream out(part,std::ios::binary);out<<"ULDATA";}
  std::array<char,6> data{};if(!loader.read(loader.games()[0],0,data.data(),data.size(),&error)){std::cerr<<error<<"\n";return 4;}
  if(std::string(data.data(),data.size())!="ULDATA")return 5;

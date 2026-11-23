@@ -12,6 +12,7 @@ std::uint32_t be32(const std::uint8_t* p){return (static_cast<std::uint32_t>(p[0
 std::string trimField(const std::uint8_t* p,std::size_t n){std::size_t a=0,b=n;while(a<b&&p[a]==' ')++a;while(b>a&&(p[b-1]==' '||p[b-1]==0))--b;return std::string(reinterpret_cast<const char*>(p+a),b-a);}
 std::string upper(std::string s){for(char& c:s)c=static_cast<char>(std::toupper(static_cast<unsigned char>(c)));return s;}
 }
+void Iso9660Image::close() noexcept{file_.close();file_.clear();fileSize_=0;rootLba_=rootSize_=0;info_={};}
 bool Iso9660Image::open(const std::filesystem::path& path,std::string* error){
  file_.close();file_.clear();info_={};rootLba_=rootSize_=0;fileSize_=0;path_=path;
  file_.open(path_,std::ios::binary);if(!file_){setError(error,"Could not open ISO image.");return false;}

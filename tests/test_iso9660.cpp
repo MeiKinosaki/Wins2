@@ -36,7 +36,7 @@ int main(){
  if(cdvd.data()[0]!='B'||cdvd.data()[S]!='\0')return 7;
  if(cdvd.read(23,2,&error)||cdvd.status()!=wins2::CdvdStatus::Error)return 8;
  if(cdvd.read(0,33,&error))return 9;
- if(!cdvd.execute(wins2::CdvdCommand::GetDiscInfo,&error))return 13;
+ if(!cdvd.execute(wins2::CdvdCommand::GetDiscInfo,0,0,&error))return 13;
  if(!cdvd.lastCommand().success||cdvd.lastCommand().command!=static_cast<std::uint8_t>(wins2::CdvdCommand::GetDiscInfo))return 14;
  if(!cdvd.execute(wins2::CdvdCommand::Seek,21,0,&error)||cdvd.lastLba()!=21)return 15;
  if(!cdvd.execute(wins2::CdvdCommand::ReadSectors,21,1,&error))return 16;

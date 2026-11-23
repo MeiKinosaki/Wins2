@@ -21,7 +21,7 @@ int main(){
  const auto path=std::filesystem::temp_directory_path()/"wins2_synthetic_ps2.iso";
  std::vector<std::uint8_t> image(24*S,0);
  auto* pvd=image.data()+16*S;pvd[0]=1;std::copy_n("CD001",5,pvd+1);pvd[6]=1;
- le32(pvd+80,24);be32(pvd+84,24);le16(pvd+128,2048);be16(pvd+130,2048);
+ std::copy_n("WINS2 TEST DISC",15,pvd+40);le32(pvd+80,24);be32(pvd+84,24);le16(pvd+128,2048);be16(pvd+130,2048);
  record(pvd+156,20,S,2,std::string(1,'\0'));
  auto* dir=image.data()+20*S;std::size_t pos=0;pos+=record(dir+pos,20,S,2,std::string(1,'\0'));pos+=record(dir+pos,20,S,2,std::string(1,'\1'));pos+=record(dir+pos,21,64,0,"SYSTEM.CNF;1");
  const std::string cnf="BOOT2 = cdrom0:\\SLUS_123.45;1\n";std::copy(cnf.begin(),cnf.end(),image.begin()+21*S);

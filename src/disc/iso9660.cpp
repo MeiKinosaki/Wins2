@@ -48,9 +48,18 @@ bool Iso9660Image::open(const std::filesystem::path& path,std::string* error){
 bool Iso9660Image::readSector(std::uint32_t lba,void* destination,std::size_t bytes,std::string* error)const{
  if(!file_.is_open()){setError(error,"No ISO image is mounted.");return false;}
  if(bytes!=kSectorSize||destination==nullptr){setError(error,"Sector reads require a non-null 2048-byte buffer.");return false;}
- if(lba>=info_.volumeSectors||static_cast<std::uint64_t>(lba+1)*kSectorSize>fileSize_){setError(error,"Requested ISO sector is outside the volume.");return false;}
+ if(lba>=info_.volumeSectors||(static_cast<std::uint64_t>(lba)+1u)*kSectorSize>fileSize_){setError(error,"Requested ISO sector is outside the volume.");return false;}
  file_.clear();file_.seekg(static_cast<std::streamoff>(static_cast<std::uint64_t>(lba)*kSectorSize));
  file_.read(static_cast<char*>(destination),static_cast<std::streamsize>(bytes));if(!file_){setError(error,"Failed to read ISO sector.");return false;}return true;
+}
+bool Iso9660Image::readSectors(std::uint32_t firstLba,std::uint32_t count,void* destination,std::string* error)const{
+ if(count==0)return true;
+ if(destination==nullptr){setError(error,"Multi-sector destination buffer is null.");return false;}
+ const auto end=static_cast<std::uint64_t>(firstLba)+count;
+ if(end>info_.volumeSectors){setError(error,"Multi-sector read exceeds ISO volume.");return false;}
+ auto* out=static_cast<std::uint8_t*>(destination);
+ for(std::uint32_t i=0;i<count;++i)if(!readSector(firstLba+i,out+static_cast<std::size_t>(i)*kSectorSize,kSectorSize,error))return false;
+ return true;
 }
 bool Iso9660Image::findRootEntry(const std::string& wanted,DirectoryEntry& result,std::string* error)const{
  if(!file_.is_open()){setError(error,"No ISO image is mounted.");return false;}
@@ -81,6 +90,15 @@ bool VirtualCdDvdDrive::mountUl(const std::filesystem::path& root,std::size_t ga
  ulGame_=ulLoader_.games()[gameIndex];ulMounted_=true;info_={};info_.volumeId=ulGame_.name;info_.serial=ulGame_.startup;return true;
 }
 void VirtualCdDvdDrive::eject()noexcept{image_.close();ulMounted_=false;ulGame_={};info_={};}
+bool VirtualCdDvdDrive::readSectors(std::uint32_t firstLba,std::uint32_t count,void* destination,std::string* error)const{
+ if(count==0)return true;
+ if(destination==nullptr){setError(error,"Multi-sector destination buffer is null.");return false;}
+ const auto end=static_cast<std::uint64_t>(firstLba)+count;
+ if(!ulMounted_)return image_.readSectors(firstLba,count,destination,error);
+ auto* out=static_cast<std::uint8_t*>(destination);
+ for(std::uint32_t i=0;i<count;++i)if(!readSector(firstLba+i,out+static_cast<std::size_t>(i)*Iso9660Image::kSectorSize,Iso9660Image::kSectorSize,error))return false;
+ (void)end;return true;
+}
 bool VirtualCdDvdDrive::readSector(std::uint32_t lba,void* destination,std::size_t bytes,std::string* error)const{
  if(ulMounted_){
   if(bytes!=Iso9660Image::kSectorSize||destination==nullptr){setError(error,"Virtual CD/DVD reads require a non-null 2048-byte sector buffer.");return false;}

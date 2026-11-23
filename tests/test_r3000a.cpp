@@ -13,13 +13,13 @@ int main(){
  memory.write32(0,mtc0(8,12));memory.write32(4,mfc0(9,12));cpu.setReg(8,0x0000FF01u);
  if(!cpu.step()||cpu.cop0(12)!=0x0000FF01u)FAIL(1);
  if(!cpu.step()||cpu.reg(9)!=0x0000FF01u)FAIL(2);
- // Masked pending interrupts do not fire; when enabled, line 2 wins over line 5.
+ // IP2-IP7 are hardware lines. Multiple pending lines are retained; software decides service priority.
  cpu.reset(0x100u);cpu.setCop0(12,0x00000201u);cpu.setInterruptLine(5,true);cpu.setInterruptLine(2,true);
  if(cpu.interruptPending())FAIL(3);
- cpu.setCop0(12,0x00002401u);if(!cpu.interruptPending())FAIL(4);
+ cpu.setCop0(12,0x00001001u);if(!cpu.interruptPending())FAIL(4);
  if(!cpu.step()||cpu.pc()!=wins2::R3000A::kGeneralExceptionVector)FAIL(5);
  if(((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=0u)FAIL(6);
- if((cpu.cop0(13)&wins2::R3000A::kCauseIPMask)!=(1u<<10u|1u<<13u))FAIL(7);
+ if((cpu.cop0(13)&wins2::R3000A::kCauseIPMask)!=(1u<<12u|1u<<15u))FAIL(7);
  if(cpu.cop0(14)!=0x100u)FAIL(8);
  // RFE restores the previous interrupt-enable stack.
  cpu.setCop0(12,0x00000404u);memory.write32(wins2::R3000A::kGeneralExceptionVector,0x42000010u);
@@ -36,7 +36,14 @@ int main(){
  // Reserved instruction raises RI instead of silently halting.
  cpu.reset(0x400u);memory.write32(0x400u,0xFFFFFFFFu);
  if(!cpu.step()||cpu.halted()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=10u)FAIL(14);
+ // Interrupt asserted between branch and delay slot records BD/EPC of branch.
+ cpu.reset(0x500u);cpu.setCop0(12,0x00001001u);memory.write32(0x500u,0x10000001u);memory.write32(0x504u,0);
+ if(!cpu.step())FAIL(15);cpu.setInterruptLine(2,true);
+ if(!cpu.step()||cpu.cop0(14)!=0x500u||(cpu.cop0(13)&wins2::R3000A::kCauseBD)==0)FAIL(16);
+ // Signed ADD overflow raises exception code 12.
+ cpu.reset(0x600u);cpu.setReg(1,0x7FFFFFFFu);cpu.setReg(2,1);memory.write32(0x600u,(1u<<21u)|(2u<<16u)|(3u<<11u)|0x20u);
+ if(!cpu.step()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=12u||cpu.cop0(14)!=0x600u)FAIL(17);
  // Save state preserves COP0 state.
- const auto state=cpu.captureState();cpu.setCop0(12,0);cpu.restoreState(state);if(cpu.cop0(12)!=state.cop0[12])FAIL(15);
+ const auto state=cpu.captureState();cpu.setCop0(12,0);cpu.restoreState(state);if(cpu.cop0(12)!=state.cop0[12])FAIL(18);
  return 0;
 }

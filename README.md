@@ -8,7 +8,7 @@
 - Portable Windows 10/11 x64 distribution, no installer.
 - Baseline x86-64/SSE2; AVX/AVX2 optional only.
 - ISO 9660 image reader prototype with 2048-byte sector reads, PVD parsing and root-level SYSTEM.CNF lookup (implemented; synthetic validation pending).
-- Virtual CD/DVD sector interface for ISO and OPL/USBExtreme UL images (implemented; not connected to the PS2 CD/DVD controller yet).
+- Virtual CD/DVD sector interface for ISO and OPL/USBExtreme UL images (implemented; initial controller transfer shim added, not yet wired to EE hardware registers or interrupts).
 - OPL/USBExtreme UL metadata and split-part reader with missing-part and range checks (implemented; validation pending).
 - BIN/CUE, CHD decoding and game-folder mounting (planned).
 - Multi-disc entries and disc switching without restarting (planned).
@@ -27,7 +27,7 @@ At startup Wins2 creates these folders beside the executable:
 The current save-state prototype stores EE RAM and the currently implemented R5900 CPU state in a versioned binary file with a checksum. It is not yet a complete PS2 save state: IOP, VU0/VU1, GS, SPU2, DMA, timers, CD/DVD and other devices must be included before compatibility across real game sessions can be claimed. Memory-card emulation is not implemented yet.
 
 ## Disc image test coverage
-- Synthetic ISO fixture validates the primary volume descriptor, sector reads, root SYSTEM.CNF and PS2 boot serial extraction.
+- Synthetic ISO fixture validates the primary volume descriptor, sector reads, root SYSTEM.CNF, PS2 boot serial extraction and bounded multi-sector CD/DVD transfers.
 - UL tests cover metadata, part reads, missing parts, overrun/overflow rejection and sector reads through the virtual drive. GitHub Actions must pass before these are marked validated.
 
 ## Build
@@ -41,7 +41,7 @@ ctest --test-dir build -C Release --output-on-failure
 
 ## Architecture roadmap
 - Emotion Engine (MIPS R5900), COP0, exceptions and FPU.
-- IOP (MIPS R3000A), VU0/VU1, GS and SPU2.
+- Initial CD/DVD controller transfer shim supports bounded 1–32-sector requests; EE register interface, DMA, interrupts, command timing and authentic drive behavior remain planned.\n- IOP (MIPS R3000A), VU0/VU1, GS and SPU2.
 - DMA, timers, interrupts, CD/DVD controller and BIOS interface.
 - Memory cards, controller input, graphics/audio backends.
 - Desktop library UI, per-game settings, multi-disc management.

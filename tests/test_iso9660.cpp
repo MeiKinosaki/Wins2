@@ -1,4 +1,5 @@
 #include "disc/iso9660.hpp"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <filesystem>

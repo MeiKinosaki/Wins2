@@ -59,7 +59,7 @@ int main(){
  if(!cpu.step()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=5u||cpu.cop0(8)!=0x102u||cpu.cop0(14)!=0x720u)FAIL(23);
  std::uint32_t unchanged=0;if(!memory.read32(0x100u,unchanged)||unchanged!=0x11223344u)FAIL(24);
  // Software interrupt pending bits are writable, but masked requests do not fire.
- cpu.reset(0x740u);cpu.setCop0(13,0x00000300u);cpu.setCop0(12,0x00000101u);
+ cpu.reset(0x740u);cpu.setCop0(13,0x00000300u);cpu.setCop0(12,0x00000001u);
  if(cpu.interruptPending())FAIL(25);
  cpu.setCop0(12,0x00000301u);if(!cpu.interruptPending())FAIL(26);
  return 0;

@@ -1,21 +1,28 @@
 #include "disc/ul_loader.hpp"
 #include <algorithm>
 #include <array>
+#include <cstdio>
 #include <fstream>
+#include <utility>
 namespace wins2 {
 namespace {
 void err(std::string* e,const std::string& s){if(e)*e=s;}
 std::string fixedText(const unsigned char* p,std::size_t n){
  std::size_t len=0;while(len<n&&p[len]!=0)++len;return std::string(reinterpret_cast<const char*>(p),len);
 }
-// OPL/USBExtreme filename checksum: reflected input with the OPL polynomial variant.
+// Matches the OPL/USBExtreme CRC table and includes the terminating NUL byte.
 std::uint32_t oplCrc32(const std::string& name){
- std::array<unsigned char,32> padded{};const auto n=std::min(name.size(),padded.size()-1);
- std::copy_n(name.begin(),n,padded.begin());
- std::uint32_t crc=0xFFFFFFFFu;
- for(std::size_t i=0;i<=n;++i){
-  crc^=static_cast<std::uint32_t>(padded[i])<<24u;
-  for(unsigned b=0;b<8;++b)crc=(crc&0x80000000u)?(crc<<1u):(crc<<1u)^0x04C11DB7u;
+ std::array<std::uint32_t,256> table{};
+ for(std::uint32_t t=0;t<256;++t){
+  std::uint32_t value=t<<24u;
+  for(unsigned bit=0;bit<8;++bit)
+   value=(value&0x80000000u)?(value<<1u):((value<<1u)^0x04C11DB7u);
+  table[255u-t]=value;
+ }
+ std::uint32_t crc=0;
+ for(std::size_t i=0;i<=name.size();++i){
+  const auto byte=(i==name.size())?0u:static_cast<unsigned char>(name[i]);
+  crc=table[byte^((crc>>24u)&0xffu)]^((crc<<8u)&0xffffff00u);
  }
  return crc;
 }
@@ -27,11 +34,11 @@ bool UlLoader::scan(const std::filesystem::path& root,std::string* error){
  if(length<0||static_cast<std::uint64_t>(length)%kRecordSize!=0){err(error,"ul.cfg has an invalid size; expected complete 64-byte records.");return false;}
  const auto count=static_cast<std::size_t>(length)/kRecordSize;
  for(std::size_t i=0;i<count;++i){
-  std::array<unsigned char,kRecordSize> r{};in.read(reinterpret_cast<char*>(r.data()),r.size());
+  std::array<unsigned char,kRecordSize> r{};in.read(reinterpret_cast<char*>(r.data()),static_cast<std::streamsize>(r.size()));
   if(!in){err(error,"Could not read a complete ul.cfg record.");games_.clear();return false;}
   if(r[32]!='u'||r[33]!='l'||r[34]!='.'||r[53]!=0x08||r[47]==0)continue;
   UlGame g;g.name=fixedText(r.data(),32);g.startup=fixedText(r.data()+35,12);g.parts=r[47];g.media=r[48];
-  if(g.name.empty()||g.startup.empty())continue;
+  if(g.name.empty()||g.startup.empty()||(g.media!=0x12&&g.media!=0x14))continue;
   g.nameCrc=oplCrc32(g.name);games_.push_back(std::move(g));
  }
  return true;
@@ -47,8 +54,8 @@ bool UlLoader::read(const UlGame& game,std::uint64_t offset,void* destination,st
  while(remaining){
   const auto part=static_cast<std::size_t>(offset/kChunkSize);const auto inPart=static_cast<std::size_t>(offset%kChunkSize);
   if(part>=game.parts){err(error,"Read exceeds the end of the USBExtreme game.");return false;}
-  std::ifstream file(partPath(game,part),std::ios::binary);
-  if(!file){err(error,"A required USBExtreme part is missing: "+partPath(game,part).string());return false;}
+  const auto path=partPath(game,part);std::ifstream file(path,std::ios::binary);
+  if(!file){err(error,"A required USBExtreme part is missing: "+path.string());return false;}
   file.seekg(0,std::ios::end);const auto end=file.tellg();
   if(end<0||inPart>=static_cast<std::uint64_t>(end)){err(error,"USBExtreme part is shorter than the requested offset.");return false;}
   const auto available=static_cast<std::size_t>(static_cast<std::uint64_t>(end)-inPart);

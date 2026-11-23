@@ -9,6 +9,7 @@ option(WINS2_BUILD_TESTS "Build Wins2 unit tests" ON)
 
 add_library(wins2_core
     src/core/memory.cpp
+    src/cpu/ee/r5900.cpp
 )
 target_include_directories(wins2_core PUBLIC src)
 if(MSVC)
@@ -25,4 +26,7 @@ if(WINS2_BUILD_TESTS)
     add_executable(wins2_tests tests/test_memory.cpp)
     target_link_libraries(wins2_tests PRIVATE wins2_core)
     add_test(NAME memory_tests COMMAND wins2_tests)
+    add_executable(wins2_r5900_tests tests/test_r5900.cpp)
+    target_link_libraries(wins2_r5900_tests PRIVATE wins2_core)
+    add_test(NAME r5900_tests COMMAND wins2_r5900_tests)
 endif()

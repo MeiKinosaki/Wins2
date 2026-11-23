@@ -50,5 +50,17 @@ int main(){
  if(!cpu.step())FAIL(19);
  if(!cpu.step()||cpu.cop0(14)!=0x001FFFFCu||(cpu.cop0(13)&wins2::R3000A::kCauseBD)==0)FAIL(20);
  if(((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=4u||cpu.cop0(8)!=0x00200000u)FAIL(21);
+ // Misaligned LW must raise AdEL and preserve the exact faulting virtual address.
+ cpu.reset(0x700u);cpu.setReg(1,0x100u);memory.write32(0x700u,(0x23u<<26u)|(1u<<21u)|(2u<<16u)|1u);
+ if(!cpu.step()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=4u||cpu.cop0(8)!=0x101u||cpu.cop0(14)!=0x700u)FAIL(22);
+ // Misaligned SW must raise AdES without modifying memory.
+ cpu.reset(0x720u);cpu.setReg(1,0x100u);cpu.setReg(2,0xAABBCCDDu);memory.write32(0x100u,0x11223344u);
+ memory.write32(0x720u,(0x2Bu<<26u)|(1u<<21u)|(2u<<16u)|2u);
+ if(!cpu.step()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=5u||cpu.cop0(8)!=0x102u||cpu.cop0(14)!=0x720u)FAIL(23);
+ std::uint32_t unchanged=0;if(!memory.read32(0x100u,unchanged)||unchanged!=0x11223344u)FAIL(24);
+ // Software interrupt pending bits are writable, but masked requests do not fire.
+ cpu.reset(0x740u);cpu.setCop0(13,0x00000300u);cpu.setCop0(12,0x00000101u);
+ if(cpu.interruptPending())FAIL(25);
+ cpu.setCop0(12,0x00000301u);if(!cpu.interruptPending())FAIL(26);
  return 0;
 }

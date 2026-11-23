@@ -33,7 +33,7 @@ int main(){
  if(std::string(reinterpret_cast<char*>(sector.data()),8)!="BOOT2 = ")return 4;
  wins2::CdvdController cdvd(drive);if(!cdvd.refresh(&error)||cdvd.status()!=wins2::CdvdStatus::Ready)return 5;
  if(!cdvd.read(21,2,&error)||cdvd.status()!=wins2::CdvdStatus::Ready||cdvd.data().size()!=2*S||cdvd.lastLba()!=22)return 6;
- if(cdvd.data()[0]!='B'||cdvd.data()[S]!='\\0')return 7;
+ if(cdvd.data()[0]!='B'||cdvd.data()[S]!='\0')return 7;
  if(cdvd.read(23,2,&error)||cdvd.status()!=wins2::CdvdStatus::Error)return 8;
  if(cdvd.read(0,33,&error))return 9;
  if(drive.readSector(24,sector.data(),sector.size(),&error))return 10;

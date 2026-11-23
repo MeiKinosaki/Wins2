@@ -8,6 +8,7 @@ add_library(wins2_core
  src/core/memory.cpp
  src/disc/ul_loader.cpp
  src/disc/iso9660.cpp
+ src/disc/cdvd_controller.cpp
  src/core/save_state.cpp
  src/cpu/ee/r5900.cpp
  src/frontend/user_paths.cpp

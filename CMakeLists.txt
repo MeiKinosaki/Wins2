@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(WINS2_BUILD_TESTS "Build Wins2 unit tests" ON)
 add_library(wins2_core
  src/core/memory.cpp
+ src/core/iop_memory.cpp
  src/disc/ul_loader.cpp
  src/disc/iso9660.cpp
  src/disc/cdvd_controller.cpp
@@ -26,6 +27,9 @@ if(WINS2_BUILD_TESTS)
  add_executable(wins2_tests tests/test_memory.cpp)
  target_link_libraries(wins2_tests PRIVATE wins2_core)
  add_test(NAME memory_tests COMMAND wins2_tests)
+ add_executable(wins2_iop_memory_tests tests/test_iop_memory.cpp)
+ target_link_libraries(wins2_iop_memory_tests PRIVATE wins2_core)
+ add_test(NAME iop_memory_tests COMMAND wins2_iop_memory_tests)
  add_executable(wins2_r5900_tests tests/test_r5900.cpp)
  target_link_libraries(wins2_r5900_tests PRIVATE wins2_core)
  add_test(NAME r5900_tests COMMAND wins2_r5900_tests)

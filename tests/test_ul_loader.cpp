@@ -1,5 +1,6 @@
 #include "disc/ul_loader.hpp"
 #include "disc/iso9660.hpp"
+#include "disc/cdvd_controller.hpp"
 #include <algorithm>
 #include <array>
 #include <filesystem>

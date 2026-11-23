@@ -45,5 +45,10 @@ int main(){
  if(!cpu.step()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=12u||cpu.cop0(14)!=0x600u)FAIL(17);
  // Save state preserves COP0 state.
  const auto state=cpu.captureState();cpu.setCop0(12,0);cpu.restoreState(state);if(cpu.cop0(12)!=state.cop0[12])FAIL(18);
+ // Instruction-fetch fault in a delay slot must report the branch PC and set BD.
+ cpu.reset(0x001FFFFCu);memory.write32(0x001FFFFCu,0x10000001u);
+ if(!cpu.step())FAIL(19);
+ if(!cpu.step()||cpu.cop0(14)!=0x001FFFFCu||(cpu.cop0(13)&wins2::R3000A::kCauseBD)==0)FAIL(20);
+ if(((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=4u||cpu.cop0(8)!=0x00200000u)FAIL(21);
  return 0;
 }

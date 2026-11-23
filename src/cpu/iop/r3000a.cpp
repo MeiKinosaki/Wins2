@@ -33,7 +33,7 @@ bool R3000A::step()noexcept{
  if(halted_)return false;
  if(interruptPending()){raiseException(IopException::Interrupt,pc_,branch_pending_);return true;}
  std::uint32_t ins=0;
- if(!memory_.read32(pc_,ins)){raiseException(IopException::AddressLoad,pc_,false,pc_);return true;}
+ if(!memory_.read32(pc_,ins)){raiseException(IopException::AddressLoad,pc_,branch_pending_,pc_);return true;}
  last_instruction_=ins;const auto here=pc_;const bool apply=branch_pending_;const auto target=branch_target_;branch_pending_=false;pc_+=4u;
  const std::uint32_t op=ins>>26u,rs=(ins>>21u)&31u,rt=(ins>>16u)&31u,rd=(ins>>11u)&31u,sa=(ins>>6u)&31u,fn=ins&63u;
  const std::uint16_t imm=static_cast<std::uint16_t>(ins);const std::int32_t simm=static_cast<std::int16_t>(imm);

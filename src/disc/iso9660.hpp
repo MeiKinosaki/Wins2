@@ -21,6 +21,7 @@ public:
  [[nodiscard]] bool open(const std::filesystem::path& path,std::string* error=nullptr);
  void close() noexcept;
  [[nodiscard]] bool readSector(std::uint32_t lba,void* destination,std::size_t bytes=kSectorSize,std::string* error=nullptr) const;
+ [[nodiscard]] bool readSectors(std::uint32_t firstLba,std::uint32_t count,void* destination,std::string* error=nullptr) const;
  [[nodiscard]] bool readRootFile(const std::string& name,std::vector<std::uint8_t>& data,std::string* error=nullptr) const;
  [[nodiscard]] const IsoDiscInfo& info() const noexcept{return info_;}
  [[nodiscard]] bool isOpen() const noexcept{return file_.is_open();}

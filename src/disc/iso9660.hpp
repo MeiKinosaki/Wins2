@@ -17,7 +17,8 @@ struct IsoDiscInfo {
 class Iso9660Image {
 public:
  static constexpr std::size_t kSectorSize=2048;
- [[nodiscard]] bool open(const std::filesystem::path& path,std::string* error=nullptr);\n void close() noexcept;
+ [[nodiscard]] bool open(const std::filesystem::path& path,std::string* error=nullptr);
+ void close() noexcept;
  [[nodiscard]] bool readSector(std::uint32_t lba,void* destination,std::size_t bytes=kSectorSize,std::string* error=nullptr) const;
  [[nodiscard]] bool readRootFile(const std::string& name,std::vector<std::uint8_t>& data,std::string* error=nullptr) const;
  [[nodiscard]] const IsoDiscInfo& info() const noexcept{return info_;}

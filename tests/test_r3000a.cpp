@@ -1,15 +1,40 @@
 #include "core/iop_memory.hpp"
 #include "cpu/iop/r3000a.hpp"
 #include <cstdint>
+namespace {
+constexpr std::uint32_t mfc0(unsigned rt,unsigned rd){return (0x10u<<26u)|(rt<<16u)|(rd<<11u);}
+constexpr std::uint32_t mtc0(unsigned rt,unsigned rd){return (0x10u<<26u)|(4u<<21u)|(rt<<16u)|(rd<<11u);}
+}
 int main(){
  wins2::IopMemory memory;wins2::R3000A cpu(memory);
- // addiu t0,zero,7; addiu t1,zero,9; addu t2,t0,t1; sw t2,0x100(zero); lw t3,0x100(zero)
- const std::uint32_t program[]={0x24080007u,0x24090009u,0x01095021u,0xAC0A0100u,0x8C0B0100u};
- for(std::size_t i=0;i<5;++i)if(!memory.write32(static_cast<std::uint32_t>(i*4),program[i]))return 1;
- for(int i=0;i<5;++i)if(!cpu.step())return 2;
- if(cpu.reg(8)!=7||cpu.reg(9)!=9||cpu.reg(10)!=16||cpu.reg(11)!=16)return 3;
- if(cpu.reg(0)!=0||cpu.pc()!=20)return 4;
- const auto state=cpu.captureState();cpu.setReg(11,99);cpu.restoreState(state);if(cpu.reg(11)!=16)return 5;
- cpu.reset(0x00200000u);if(cpu.step()||!cpu.halted())return 6;
+ // COP0 transfer round-trip: write Status, read it back.
+ memory.write32(0,mtc0(8,12));memory.write32(4,mfc0(9,12));cpu.setReg(8,0x0000FF01u);
+ if(!cpu.step()||cpu.cop0(12)!=0x0000FF01u)return 1;
+ if(!cpu.step()||cpu.reg(9)!=0x0000FF01u)return 2;
+ // Masked pending interrupts do not fire; when enabled, line 2 wins over line 5.
+ cpu.reset(0x100u);cpu.setCop0(12,0x00000401u);cpu.setInterruptLine(5,true);cpu.setInterruptLine(2,true);
+ if(cpu.interruptPending())return 3;
+ cpu.setCop0(12,0x00002401u);if(!cpu.interruptPending())return 4;
+ if(!cpu.step()||cpu.pc()!=wins2::R3000A::kGeneralExceptionVector)return 5;
+ if(((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=0u)return 6;
+ if((cpu.cop0(13)&wins2::R3000A::kCauseIPMask)!=(1u<<10u|1u<<13u))return 7;
+ if(cpu.cop0(14)!=0x100u)return 8;
+ // RFE restores the previous interrupt-enable stack.
+ cpu.setCop0(12,0x00000404u);memory.write32(wins2::R3000A::kGeneralExceptionVector,0x42000010u);
+ if(!cpu.step()||(cpu.cop0(12)&0x0Fu)!=1u)return 9;
+ // SYSCALL exception captures EPC and vectors through BEV when requested.
+ cpu.reset(0x200u);memory.write32(0x200u,0x0000000Cu);
+ if(!cpu.step()||cpu.pc()!=wins2::R3000A::kGeneralExceptionVector||cpu.cop0(14)!=0x200u)return 10;
+ if(((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=8u)return 11;
+ cpu.reset(0x204u);cpu.setCop0(12,wins2::R3000A::kStatusBEV);memory.write32(0x204u,0x0000000Du);
+ if(!cpu.step()||cpu.pc()!=wins2::R3000A::kBootstrapExceptionVector)return 12;
+ // Exception in a branch delay slot records branch PC and BD.
+ cpu.reset(0x300u);memory.write32(0x300u,0x10000001u);memory.write32(0x304u,0x0000000Cu);
+ if(!cpu.step()||!cpu.step()||cpu.cop0(14)!=0x300u||(cpu.cop0(13)&wins2::R3000A::kCauseBD)==0)return 13;
+ // Reserved instruction raises RI instead of silently halting.
+ cpu.reset(0x400u);memory.write32(0x400u,0xFFFFFFFFu);
+ if(!cpu.step()||cpu.halted()||((cpu.cop0(13)&wins2::R3000A::kCauseExcCodeMask)>>2u)!=10u)return 14;
+ // Save state preserves COP0 state.
+ const auto state=cpu.captureState();cpu.setCop0(12,0);cpu.restoreState(state);if(cpu.cop0(12)!=state.cop0[12])return 15;
  return 0;
 }

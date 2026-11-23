@@ -1,4 +1,5 @@
 #include "disc/iso9660.hpp"
+#include "disc/cdvd_controller.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -30,8 +31,13 @@ int main(){
  if(!drive.mounted()||drive.discInfo().volumeId.empty()||drive.discInfo().serial!="SLUS_123.45")return 2;
  std::array<std::uint8_t,S> sector{};if(!drive.readSector(21,sector.data(),sector.size(),&error))return 3;
  if(std::string(reinterpret_cast<char*>(sector.data()),8)!="BOOT2 = ")return 4;
- if(drive.readSector(24,sector.data(),sector.size(),&error))return 5;
- if(drive.readSector(0,sector.data(),512,&error))return 6;
- drive.eject();if(drive.mounted()||drive.readSector(0,sector.data(),sector.size(),&error))return 7;
+ wins2::CdvdController cdvd(drive);if(!cdvd.refresh(&error)||cdvd.status()!=wins2::CdvdStatus::Ready)return 5;
+ if(!cdvd.read(21,2,&error)||cdvd.status()!=wins2::CdvdStatus::Ready||cdvd.data().size()!=2*S||cdvd.lastLba()!=22)return 6;
+ if(cdvd.data()[0]!='B'||cdvd.data()[S]!='\\0')return 7;
+ if(cdvd.read(23,2,&error)||cdvd.status()!=wins2::CdvdStatus::Error)return 8;
+ if(cdvd.read(0,33,&error))return 9;
+ if(drive.readSector(24,sector.data(),sector.size(),&error))return 10;
+ if(drive.readSector(0,sector.data(),512,&error))return 11;
+ drive.eject();if(drive.mounted()||drive.readSector(0,sector.data(),sector.size(),&error))return 12;
  std::filesystem::remove(path);std::cout<<"ISO 9660 sector, SYSTEM.CNF PS2 serial and virtual drive tests passed.\n";return 0;
 }

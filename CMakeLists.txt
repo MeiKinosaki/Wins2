@@ -12,6 +12,7 @@ add_library(wins2_core
  src/disc/cdvd_controller.cpp
  src/core/save_state.cpp
  src/cpu/ee/r5900.cpp
+ src/cpu/iop/r3000a.cpp
  src/frontend/user_paths.cpp
 )
 target_include_directories(wins2_core PUBLIC src)
@@ -33,6 +34,9 @@ if(WINS2_BUILD_TESTS)
  add_executable(wins2_r5900_tests tests/test_r5900.cpp)
  target_link_libraries(wins2_r5900_tests PRIVATE wins2_core)
  add_test(NAME r5900_tests COMMAND wins2_r5900_tests)
+ add_executable(wins2_r3000a_tests tests/test_r3000a.cpp)
+ target_link_libraries(wins2_r3000a_tests PRIVATE wins2_core)
+ add_test(NAME r3000a_tests COMMAND wins2_r3000a_tests)
  add_executable(wins2_storage_tests tests/test_storage.cpp)
  target_link_libraries(wins2_storage_tests PRIVATE wins2_core)
  add_test(NAME storage_tests COMMAND wins2_storage_tests)

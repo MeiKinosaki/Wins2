@@ -50,6 +50,7 @@ std::filesystem::path UlLoader::partPath(const UlGame& game,std::size_t part)con
 }
 bool UlLoader::read(const UlGame& game,std::uint64_t offset,void* destination,std::size_t bytes,std::string* error)const{
  if(bytes&&destination==nullptr){err(error,"Destination buffer is null.");return false;}
+ if(bytes>0&&offset>UINT64_MAX-static_cast<std::uint64_t>(bytes)){err(error,"Read offset overflow.");return false;}
  auto* out=static_cast<char*>(destination);std::size_t remaining=bytes;
  while(remaining){
   const auto part=static_cast<std::size_t>(offset/kChunkSize);const auto inPart=static_cast<std::size_t>(offset%kChunkSize);

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "disc/ul_loader.hpp"
 
 namespace wins2 {
 struct IsoDiscInfo {
@@ -35,11 +36,16 @@ private:
 class VirtualCdDvdDrive {
 public:
  [[nodiscard]] bool mountIso(const std::filesystem::path& path,std::string* error=nullptr);
+ [[nodiscard]] bool mountUl(const std::filesystem::path& root,std::size_t gameIndex,std::string* error=nullptr);
  void eject() noexcept;
  [[nodiscard]] bool readSector(std::uint32_t lba,void* destination,std::size_t bytes=Iso9660Image::kSectorSize,std::string* error=nullptr) const;
- [[nodiscard]] bool mounted() const noexcept{return image_.isOpen();}
- [[nodiscard]] const IsoDiscInfo& discInfo() const noexcept{return image_.info();}
+ [[nodiscard]] bool mounted() const noexcept{return image_.isOpen()||ulMounted_;}
+ [[nodiscard]] const IsoDiscInfo& discInfo() const noexcept{return info_;}
 private:
  Iso9660Image image_;
+ UlLoader ulLoader_;
+ UlGame ulGame_;
+ IsoDiscInfo info_;
+ bool ulMounted_{false};
 };
 }
